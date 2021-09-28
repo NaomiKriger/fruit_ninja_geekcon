@@ -1,35 +1,81 @@
-import numpy as np
-import cv2
+import os
+import pygame
+import random
+import sys
 
-# img = cv2.imread('assets/python_logo.jpg', 1)
-# cv2.imshow('Image', img)
-# cv2.waitKey(1000)
-# cv2.destroyAllWindows()
-from src.utils import get_darkness_blobs, get_darkened_pixels
+width = 500
+height = 700
+white = (255, 255, 255)
+black = (0, 0, 0)
+clock = pygame.time.Clock()
+g = 1
+score = 0
+fps = 13
+fruits = ['watermelon', 'orange', 'apple']
 
-print(get_darkness_blobs([0, 1, 2, 3, 6, 7, 8, 10, 11]))
+pygame.init()
+gameDisplay = pygame.display.set_mode((width, height))
+gameDisplay.fill(white)
+font = pygame.font.Font(os.path.join(os.getcwd(), 'comic.ttf'), 32)
+score_text = font.render(str(score), True, black, white)
 
 
-cap = cv2.VideoCapture(1)  # (0) is the laptop's cam, (1) is the external webcam
+def generate_random_fruits(fruit):
+    path = os.path.join(os.getcwd(), fruit + '.png')
+    data[fruit] = {
+        'img': pygame.image.load(path),
+        'x': random.randint(100, 500),
+        'y': 800,
+        'speed_x': random.randint(-10, 10),
+        'speed_y': random.randint(-80, -60),
+        'throw': False,
+        't': 0,
+        'hit': False,
+    }
+
+    if random.random() >= 0.75:
+        data[fruit]['throw'] = True
+    else:
+        data[fruit]['throw'] = False
+
+
+data = {}
+for fruit in fruits:
+    generate_random_fruits(fruit)
+
+pygame.display.update()
+
 while True:
-    ret, frame = cap.read()
-    width = int(cap.get(3))
-    height = int(cap.get(4))
+    gameDisplay.fill(white)
+    gameDisplay.blit(score_text, (0, 0))
+    for key, value in data.items():
+        if value['throw']:
+            value['x'] = value['x'] + value['speed_x']
+            value['y'] = value['y'] + value['speed_y']
+            value['speed_y'] += (g * value['t'])
+            value['t'] += 1
 
-    image = np.zeros(frame.shape, np.uint8)
-    image[180] = frame[180]
+            if value['y'] <= 800:
+                gameDisplay.blit(value['img'], (value['x'], value['y']))
+            else:
+                generate_random_fruits(key)
 
-    # smaller_frame = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)
-    # image[:height // 2, : width // 2] = cv2.rotate(smaller_frame, cv2.cv2.ROTATE_180)
-    # image[:height//2, : width//2] = cv2.rotate(smaller_frame, cv2.cv2.ROTATE_180)
-    # image[height//2:, : width//2] = smaller_frame
-    # image[:height//2, width//2:] = smaller_frame
-    # image[height//2:, width//2:] = smaller_frame
+            current_position = pygame.mouse.get_pos()
+            if not value['hit'] and current_position[0] > value['x'] and current_position[0] < value['x'] + 60 and \
+                    current_position[1] > value['y'] and current_position[1] < value['y'] + 60:
+                path = os.path.join(os.getcwd(), 'half_' + key + '.png')
+                value['img'] = pygame.image.load(path)
+                value['speed_x'] += 10
+                score += 1
+                score_text = font.render(str(score), True, black, white)
+                value['hit'] = True
 
-    cv2.imshow('frame', image)
-    print(get_darkened_pixels(frame))
-    if cv2.waitKey(1) == ord('q'):
-        break
+        else:
+            generate_random_fruits(key)
 
-cap.release()
-cv2.destroyAllWindows()
+    pygame.display.update()
+    clock.tick(fps)
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            sys.exit()
