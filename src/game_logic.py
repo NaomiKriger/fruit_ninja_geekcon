@@ -1,15 +1,16 @@
-import os
 import random
 import sys
+from pathlib import Path
 from typing import Tuple
 
 import pygame
 from pygame.surface import Surface
 
-from pathlib import Path
-
 MEDIA_PATH = Path(__file__).parent / 'media'
-
+GLARE_SPRITE = pygame.transform.scale(
+    pygame.image.load(MEDIA_PATH / 'sprites' / 'glare.png'),
+    (118, 101)
+)
 WIDTH = 500
 HEIGHT = 700
 WHITE = (255, 255, 255)
@@ -18,8 +19,8 @@ CURSOR_COLOR = (209, 238, 239)
 clock = pygame.time.Clock()
 g = 1
 score = 0
-fps = 13
-fruits = ['watermelon', 'orange', 'apple']
+FPS = 13
+FRUITS = ['watermelon', 'orange', 'apple']
 
 pygame.init()
 gameDisplay = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -51,14 +52,11 @@ def generate_random_fruit(fruit: str) -> None:
 
 
 def paint_cursor(surface: Surface, position: Tuple[int, int]) -> None:
-    glare_sprite = pygame.image.load(os.path.join(os.getcwd(), 'src', 'media', 'sprites', 'glare.png'))
-    glare_sprite = pygame.transform.scale(glare_sprite, (118, 101))
-
-    surface.blit(glare_sprite, (position[0] - 59, position[1] - 50))
+    surface.blit(GLARE_SPRITE, (position[0] - 59, position[1] - 50))
 
 
 data = {}
-for fruit in fruits:
+for fruit in FRUITS:
     generate_random_fruit(fruit)
 
 pygame.display.update()
@@ -95,7 +93,7 @@ def game_loop():
             generate_random_fruit(key)
 
     pygame.display.update()
-    clock.tick(fps)
+    clock.tick(FPS)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
