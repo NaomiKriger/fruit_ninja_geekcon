@@ -1,7 +1,10 @@
+import os
 import random
 import sys
+from typing import Tuple
 
 import pygame
+from pygame.surface import Surface
 
 from pathlib import Path
 
@@ -11,6 +14,7 @@ WIDTH = 500
 HEIGHT = 700
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+CURSOR_COLOR = (209, 238, 239)
 clock = pygame.time.Clock()
 g = 1
 score = 0
@@ -25,6 +29,7 @@ font = pygame.font.Font(
     32,
 )
 score_text = font.render(str(score), True, BLACK, WHITE)
+
 
 def generate_random_fruit(fruit: str) -> None:
     path = MEDIA_PATH / 'sprites' / (fruit + '.png')
@@ -43,6 +48,13 @@ def generate_random_fruit(fruit: str) -> None:
         data[fruit]['throw'] = True
     else:
         data[fruit]['throw'] = False
+
+
+def paint_cursor(surface: Surface, position: Tuple[int, int]) -> None:
+    glare_sprite = pygame.image.load(os.path.join(os.getcwd(), 'src', 'media', 'sprites', 'glare.png'))
+    glare_sprite = pygame.transform.scale(glare_sprite, (118, 101))
+
+    surface.blit(glare_sprite, (position[0] - 59, position[1] - 50))
 
 
 data = {}
@@ -69,6 +81,8 @@ def game_loop():
                 generate_random_fruit(key)
 
             current_position = pygame.mouse.get_pos()
+            paint_cursor(gameDisplay, current_position)
+
             if is_hit(current_position, value):
                 path = MEDIA_PATH / 'sprites' / ('half_' + key + '.png')
                 value['img'] = pygame.image.load(path)
