@@ -6,13 +6,19 @@ from typing import Tuple
 import pygame
 from pygame.surface import Surface
 
+import tkinter as tk
+
+root = tk.Tk()
+
+WIDTH = root.winfo_screenwidth()
+HEIGHT = root.winfo_screenheight()
+
+
 MEDIA_PATH = Path(__file__).parent / 'media'
 GLARE_SPRITE = pygame.transform.scale(
     pygame.image.load(MEDIA_PATH / 'sprites' / 'glare.png'),
     (118, 101)
 )
-WIDTH = 500
-HEIGHT = 700
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 CURSOR_COLOR = (209, 238, 239)
