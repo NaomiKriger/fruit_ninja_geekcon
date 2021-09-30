@@ -1,8 +1,11 @@
-import os
 import random
 import sys
 
 import pygame
+
+from pathlib import Path
+
+MEDIA_PATH = Path(__file__).parent / 'media'
 
 WIDTH = 500
 HEIGHT = 700
@@ -17,12 +20,15 @@ fruits = ['watermelon', 'orange', 'apple']
 pygame.init()
 gameDisplay = pygame.display.set_mode((WIDTH, HEIGHT))
 gameDisplay.fill(WHITE)
-font = pygame.font.Font(os.path.join(os.getcwd(), 'src', 'media', 'fonts', 'comic.ttf'), 32)
+font = pygame.font.Font(
+    MEDIA_PATH / 'fonts' / 'comic.ttf',
+    32,
+)
 score_text = font.render(str(score), True, BLACK, WHITE)
 
 
 def generate_random_fruit(fruit: str) -> None:
-    path = os.path.join(os.getcwd(), 'src', 'media', 'sprites', fruit + '.png')
+    path = MEDIA_PATH / 'sprites' / (fruit + '.png')
     data[fruit] = {
         'img': pygame.image.load(path),
         'x': random.randint(100, 500),
@@ -64,7 +70,7 @@ while True:
             current_position = pygame.mouse.get_pos()
             if not value['hit'] and current_position[0] > value['x'] and current_position[0] < value['x'] + 60 and \
                     current_position[1] > value['y'] and current_position[1] < value['y'] + 60:
-                path = os.path.join(os.getcwd(), 'src', 'media', 'sprites', 'half_' + key + '.png')
+                path = MEDIA_PATH / 'sprites' / ('half_' + key + '.png')
                 value['img'] = pygame.image.load(path)
                 value['speed_x'] += 10
                 score += 1
