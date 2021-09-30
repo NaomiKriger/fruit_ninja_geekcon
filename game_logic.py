@@ -1,13 +1,13 @@
-import random
-
 import os
-import pygame
+import random
 import sys
 
-width = 500
-height = 700
-white = (255, 255, 255)
-black = (0, 0, 0)
+import pygame
+
+WIDTH = 500
+HEIGHT = 700
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
 clock = pygame.time.Clock()
 g = 1
 score = 0
@@ -15,13 +15,13 @@ fps = 13
 fruits = ['watermelon', 'orange', 'apple']
 
 pygame.init()
-gameDisplay = pygame.display.set_mode((width, height))
-gameDisplay.fill(white)
+gameDisplay = pygame.display.set_mode((WIDTH, HEIGHT))
+gameDisplay.fill(WHITE)
 font = pygame.font.Font(os.path.join(os.getcwd(), 'src', 'media', 'fonts', 'comic.ttf'), 32)
-score_text = font.render(str(score), True, black, white)
+score_text = font.render(str(score), True, BLACK, WHITE)
 
 
-def generate_random_fruits(fruit):
+def generate_random_fruit(fruit: str) -> None:
     path = os.path.join(os.getcwd(), 'src', 'media', 'sprites', fruit + '.png')
     data[fruit] = {
         'img': pygame.image.load(path),
@@ -42,12 +42,12 @@ def generate_random_fruits(fruit):
 
 data = {}
 for fruit in fruits:
-    generate_random_fruits(fruit)
+    generate_random_fruit(fruit)
 
 pygame.display.update()
 
 while True:
-    gameDisplay.fill(white)
+    gameDisplay.fill(WHITE)
     gameDisplay.blit(score_text, (0, 0))
     for key, value in data.items():
         if value['throw']:
@@ -59,7 +59,7 @@ while True:
             if value['y'] <= 800:
                 gameDisplay.blit(value['img'], (value['x'], value['y']))
             else:
-                generate_random_fruits(key)
+                generate_random_fruit(key)
 
             current_position = pygame.mouse.get_pos()
             if not value['hit'] and current_position[0] > value['x'] and current_position[0] < value['x'] + 60 and \
@@ -68,11 +68,11 @@ while True:
                 value['img'] = pygame.image.load(path)
                 value['speed_x'] += 10
                 score += 1
-                score_text = font.render(str(score), True, black, white)
+                score_text = font.render(str(score), True, BLACK, WHITE)
                 value['hit'] = True
 
         else:
-            generate_random_fruits(key)
+            generate_random_fruit(key)
 
     pygame.display.update()
     clock.tick(fps)
