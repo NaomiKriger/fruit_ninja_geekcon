@@ -1,4 +1,4 @@
-from src import game_logic
+import game_logic
 
 
 def main():
