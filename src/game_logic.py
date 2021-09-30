@@ -26,7 +26,6 @@ font = pygame.font.Font(
 )
 score_text = font.render(str(score), True, BLACK, WHITE)
 
-
 def generate_random_fruit(fruit: str) -> None:
     path = MEDIA_PATH / 'sprites' / (fruit + '.png')
     data[fruit] = {
@@ -52,7 +51,9 @@ for fruit in fruits:
 
 pygame.display.update()
 
-while True:
+
+def game_loop():
+    global score_text, score
     gameDisplay.fill(WHITE)
     gameDisplay.blit(score_text, (0, 0))
     for key, value in data.items():
@@ -68,8 +69,7 @@ while True:
                 generate_random_fruit(key)
 
             current_position = pygame.mouse.get_pos()
-            if not value['hit'] and current_position[0] > value['x'] and current_position[0] < value['x'] + 60 and \
-                    current_position[1] > value['y'] and current_position[1] < value['y'] + 60:
+            if is_hit(current_position, value):
                 path = MEDIA_PATH / 'sprites' / ('half_' + key + '.png')
                 value['img'] = pygame.image.load(path)
                 value['speed_x'] += 10
@@ -86,3 +86,13 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
+
+
+def is_hit(current_position, value):
+    return all([
+        not value['hit'],
+        current_position[0] > value['x'],
+        current_position[0] < value['x'] + 60,
+        current_position[1] > value['y'],
+        current_position[1] < value['y'] + 60,
+    ])
