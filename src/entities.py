@@ -99,13 +99,15 @@ class Fruit:
         self.throw = value
 
     def is_hit(self, current_position: Tuple[int, int]) -> bool:
-        return all([
-            not self.hit,
-            current_position[0] > self.get_x(),
-            current_position[0] < self.get_x() + 60,
-            current_position[1] > self.get_y(),
-            current_position[1] < self.get_y() + 60,
-        ])
+            current_x, current_y = current_position
+            range_x, range_y = self.img.get_width(), self.img.get_height()
+            return all([
+                not self.hit,
+                current_x > self.get_x(),
+                current_x < self.get_x() + range_x,
+                current_y > self.get_y(),
+                current_y < self.get_y() + range_y,
+            ])
 
     @staticmethod
     def generate_random_fruit(collection: FruitCollection, ftype: str) -> None:
@@ -182,7 +184,7 @@ class Game:
                 else:
                     Fruit.generate_random_fruit(self.fruit_collection, key)
 
-                current_position = pygame.mouse.get_pos()
+                current_position = self.cursor.get_current_position()
                 self.cursor.draw(self.surface)
 
                 if value.is_hit(current_position):
