@@ -77,7 +77,7 @@ class Fruit:
     def get_position(self) -> Tuple[int, int]:
         return self.get_x(), self.get_y()
 
-    def get_speed_x(self) -> int:
+    def get_speed_x(self) -> float:
         return self.speed_x
 
     def set_speed_x(self, value: float) -> None:
@@ -86,7 +86,7 @@ class Fruit:
     def get_speed_y(self) -> int:
         return self.speed_y
 
-    def set_speed_y(self, value: int) -> int:
+    def set_speed_y(self, value: float) -> None:
         self.speed_y = value
 
     def get_img(self) -> image:
@@ -130,14 +130,14 @@ class Fruit:
         return speed_x_random
 
     @staticmethod
-    def generate_random_fruit(collection: FruitCollection, ftype: str) -> None:
-        path = MEDIA_PATH / 'sprites' / (ftype + '.png')
-        collection.set_fruit(ftype, Fruit(fruit_type=ftype, img_path=path))
+    def generate_random_fruit(collection: FruitCollection, fruit_type: str) -> None:
+        path = MEDIA_PATH / 'sprites' / (fruit_type + '.png')
+        collection.set_fruit(fruit_type, Fruit(fruit_type=fruit_type, img_path=path))
 
         if random.random() >= 0.75:
-            collection.get_fruit(ftype).set_throw(True)
+            collection.get_fruit(fruit_type).set_throw(True)
         else:
-            collection.get_fruit(ftype).set_throw(False)
+            collection.get_fruit(fruit_type).set_throw(False)
 
 
 class Game:
