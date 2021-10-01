@@ -53,7 +53,7 @@ def generate_random_fruit(fruit: str) -> None:
         'img': pygame.image.load(path),
         'x': random.randint(0, WIDTH),
         'y': HEIGHT,
-        'speed_x': get_speed_x_random(),
+        'speed_x': get_speed_x_random()*2,
         'speed_y': -1600 + random.randint(-300, 300),
         'throw': False,
         't': 0,
@@ -77,6 +77,15 @@ for fruit in FRUITS:
 pygame.display.update()
 
 
+def get_x_location(value):
+    current_x = int(value['x'] + value['speed_x'])
+    if current_x > WIDTH or current_x < 0:
+        value["speed_x"] = -value["speed_x"]*0.9
+        current_x = int(value['x'] + value['speed_x'])
+        value['speed_y'] = value['speed_y'] - 10
+    return current_x
+
+
 def game_loop():
     global score_text, score
     gameDisplay.fill(WHITE)
@@ -84,16 +93,16 @@ def game_loop():
     for key, value in data.items():
         if value['throw']:
             dt = SPF*value["t"]
-            value['x'] = int(value['x'] + value['speed_x'])
+            value['x'] = get_x_location(value)
             value['y'] = int(HEIGHT + value['speed_y']*(dt))
             value['speed_y'] = value['speed_y'] + (g * dt)
             value['t'] += 1
             print(f"{int(value['speed_y'])}, {value['t']}, {int(value['y'])}")
 
-            if value['y'] <= HEIGHT:
-                gameDisplay.blit(value['img'], (value['x'], value['y']))
-            else:
+            if value['y'] > HEIGHT:# or (0 > value['x'] or  value['x'] > WIDTH):
                 generate_random_fruit(key)
+            else:
+                gameDisplay.blit(value['img'], (value['x'], value['y']))
 
             current_position = pygame.mouse.get_pos()
             paint_cursor(gameDisplay, current_position)
