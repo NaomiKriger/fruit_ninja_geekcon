@@ -6,6 +6,8 @@ from typing import Tuple
 import pygame
 from pygame.surface import Surface
 
+from entities import Fruit
+
 MEDIA_PATH = Path(__file__).parent / 'media'
 GLARE_SPRITE = pygame.transform.scale(
     pygame.image.load(MEDIA_PATH / 'sprites' / 'glare.png'),
@@ -32,23 +34,14 @@ font = pygame.font.Font(
 score_text = font.render(str(score), True, BLACK, WHITE)
 
 
-def generate_random_fruit(fruit: str) -> None:
-    path = MEDIA_PATH / 'sprites' / (fruit + '.png')
-    data[fruit] = {
-        'img': pygame.image.load(path),
-        'x': random.randint(100, 500),
-        'y': 800,
-        'speed_x': random.randint(-10, 10),
-        'speed_y': random.randint(-80, -60),
-        'throw': False,
-        't': 0,
-        'hit': False,
-    }
+def generate_random_fruit(fruit_type: str) -> None:
+    path = MEDIA_PATH / 'sprites' / (fruit_type + '.png')
+    data[fruit_type] = Fruit(ftype=fruit_type, img_path=path)
 
-    if (random.random() >= 0.75):
-        data[fruit]['throw'] = True
+    if random.random() >= 0.75:
+        data[fruit_type].throw = True
     else:
-        data[fruit]['throw'] = False
+        data[fruit_type].throw = False
 
 
 def paint_cursor(surface: Surface, position: Tuple[int, int]) -> None:
@@ -67,14 +60,14 @@ def game_loop():
     gameDisplay.fill(WHITE)
     gameDisplay.blit(score_text, (0, 0))
     for key, value in data.items():
-        if value['throw']:
-            value['x'] = value['x'] + value['speed_x']
-            value['y'] = value['y'] + value['speed_y']
-            value['speed_y'] += (g * value['t'])
-            value['t'] += 1
+        if value.throw:
+            value.x = value.x + value.speed_x
+            value.y = value.y + value.speed_y
+            value.speed_y += (g * value.t)
+            value.t += 1
 
-            if value['y'] <= 800:
-                gameDisplay.blit(value['img'], (value['x'], value['y']))
+            if value.y <= 800:
+                gameDisplay.blit(value.img, (value.x, value.y))
             else:
                 generate_random_fruit(key)
 
@@ -83,11 +76,11 @@ def game_loop():
 
             if is_hit(current_position, value):
                 path = MEDIA_PATH / 'sprites' / ('half_' + key + '.png')
-                value['img'] = pygame.image.load(path)
-                value['speed_x'] += 10
+                value.img = pygame.image.load(path)
+                value.speed_x += 10
                 score += 1
                 score_text = font.render(str(score), True, BLACK, WHITE)
-                value['hit'] = True
+                value.hit = True
 
         else:
             generate_random_fruit(key)
@@ -102,9 +95,9 @@ def game_loop():
 
 def is_hit(current_position, value):
     return all([
-        not value['hit'],
-        current_position[0] > value['x'],
-        current_position[0] < value['x'] + 60,
-        current_position[1] > value['y'],
-        current_position[1] < value['y'] + 60,
+        not value.hit,
+        current_position[0] > value.x,
+        current_position[0] < value.x + 60,
+        current_position[1] > value.y,
+        current_position[1] < value.y + 60,
     ])
