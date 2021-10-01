@@ -97,9 +97,8 @@ def game_loop():
             value['y'] = int(HEIGHT + value['speed_y']*(dt))
             value['speed_y'] = value['speed_y'] + (g * dt)
             value['t'] += 1
-            print(f"{int(value['speed_y'])}, {value['t']}, {int(value['y'])}")
 
-            if value['y'] > HEIGHT:# or (0 > value['x'] or  value['x'] > WIDTH):
+            if value['y'] > HEIGHT:
                 generate_random_fruit(key)
             else:
                 gameDisplay.blit(value['img'], (value['x'], value['y']))
@@ -110,7 +109,7 @@ def game_loop():
             if is_hit(current_position, value):
                 path = MEDIA_PATH / 'sprites' / ('half_' + key + '.png')
                 value['img'] = pygame.image.load(path)
-                value['speed_x'] += 0
+                value['speed_x'] += get_speed_x_random()
                 score += 1
                 score_text = font.render(str(score), True, BLACK, WHITE)
                 value['hit'] = True
