@@ -51,7 +51,7 @@ class FruitCollection:
 
 
 class Fruit:
-    def __init__(self, ftype: str, img_path: Path,):
+    def __init__(self, ftype: str, img_path: Path):
         self.ftype = ftype
         self.img = pygame.image.load(img_path)
         self.x = random.randint(100, 500)
@@ -179,7 +179,7 @@ class Game:
                 value.speed_y += (g * value.t)
                 value.t += 1
 
-                if value.get_y() <= 800:
+                if value.get_y() <= self.get_height():
                     self.surface.blit(value.get_img(), value.get_position())
                 else:
                     Fruit.generate_random_fruit(self.fruit_collection, key)
