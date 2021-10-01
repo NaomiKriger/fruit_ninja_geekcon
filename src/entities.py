@@ -1,21 +1,19 @@
 import random
 import sys
 from pathlib import Path
-from typing import Tuple, List
+from typing import Tuple
 
 import pygame
 from pygame import image
-from pygame.font import Font
 from pygame.surface import Surface
 
-from constants import MEDIA_PATH, WHITE, BLACK, FRUITS, CLOCK, FPS, WIDTH, HEIGHT, g
+from constants import MEDIA_PATH, WHITE, BLACK, FRUITS, CLOCK, FPS, WIDTH, HEIGHT, g, GLARE_SPRITE
 
 
 class Player:
     def __init__(self, player_name: str):
         self.player_name = player_name
         self.score = 0
-        self.missed_count = 5
 
     def get_score(self) -> int:
         return self.score
@@ -23,21 +21,21 @@ class Player:
     def set_score(self, value: int) -> None:
         self.score = value
 
-    def get_missed_count(self) -> int:
-        return self.missed_count
-
-    def set_missed_count(self, value: int) -> None:
-        self.missed_count = value
-
 
 class Cursor:
+    def __init__(self, mouse_obj):
+        self.mouse_obj = mouse_obj
 
     def get_current_position(self) -> Tuple[int, int]:
-        pass
+        return self.mouse_obj.get_pos()
+
+    def draw(self, surface: Surface) -> None:
+        x_coor, y_coor = self.mouse_obj.get_pos()
+        center_x, center_y = GLARE_SPRITE.get_width() // 2, GLARE_SPRITE.get_height() //2
+        surface.blit(GLARE_SPRITE, (x_coor - center_x, y_coor - center_y))
 
 
 class FruitCollection:
-
     def __init__(self, *args):
         for ftype in args:
             self.__dict__[ftype] = None
@@ -154,6 +152,7 @@ class Game:
         )
         self.score_text = self.font.render(str(self.player.get_score()), True, BLACK, WHITE)
         self.surface = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.cursor = Cursor(pygame.mouse)
 
         for fruit in FRUITS:
             Fruit.generate_random_fruit(self.fruit_collection, fruit)
@@ -184,7 +183,7 @@ class Game:
                     Fruit.generate_random_fruit(self.fruit_collection, key)
 
                 current_position = pygame.mouse.get_pos()
-                # paint_cursor(gameDisplay, current_position)
+                self.cursor.draw(self.surface)
 
                 if value.is_hit(current_position):
                     path = MEDIA_PATH / 'sprites' / ('half_' + key + '.png')
