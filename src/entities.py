@@ -2,6 +2,7 @@ import random
 import sys
 from pathlib import Path
 from typing import Tuple
+import cv2
 
 import numpy
 import pygame
@@ -22,30 +23,20 @@ class Player:
     def set_score(self, value: int) -> None:
         self.score = value
 
-import cv2
-
-zeros_and_a_one = numpy.ndarray((720,1280,3))
-for col in zeros_and_a_one:
-    for pixel in col:
-        pixel[0] = 1.0
-        pixel[1] = 1.0
-        pixel[2] = 1.0
 
 
 class Cursor:
     def __init__(self):
         self.cap = cv2.VideoCapture(1)  # (0) is the laptop's cam, (1) is the external webcam
 
-    def get_blue_blob_position(self,):
+    def get_blue_blob_position(self):
         ret, frame = self.cap.read()
         frame_2 = frame * [1, 0, 0]
 
-        gray_full = cv2.cvtColor(numpy.uint8(frame_2), cv2.COLOR_RGB2GRAY)
+        gray_full = cv2.cvtColor(numpy.uint8(frame_2), cv2.COLOR_BGR2GRAY)
         gray_full_final = cv2.GaussianBlur(gray_full, (31, 31), 0)
-        (_, _, _, (x_coor, y_coor)) = cv2.minMaxLoc(gray_full_final)
-        # cv2.circle(gray_full_final, maxLoc_f, 30, (0, 0, 255), 2)
-        # print(maxVal_f, maxLoc_f)
-        # cv2.imshow("Robust", numpy.uint8(frame_2))
+        _, _, _, (x_coor, y_coor) = cv2.minMaxLoc(gray_full_final)
+
 
         return WIDTH - x_coor, y_coor
 

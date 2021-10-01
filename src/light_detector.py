@@ -22,3 +22,7 @@
 #
 # cap.release()
 # cv2.destroyAllWindows()
+
+# cv2.circle(gray_full_final, maxLoc_f, 30, (0, 0, 255), 2)
+# print(maxVal_f, maxLoc_f)
+# cv2.imshow("Robust", numpy.uint8(frame_2))
