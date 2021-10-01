@@ -53,7 +53,7 @@ class FruitCollection:
 class Fruit:
     def __init__(self, fruit_type: str, img_path: Path):
         self.ftype = fruit_type
-        self.img = pygame.image.load(img_path)
+        self.img = pygame.transform.scale(pygame.image.load(img_path), (160, 160))
         self.x = random.randint(0, WIDTH)
         self.y = HEIGHT
         self.speed_x = self.get_speed_x_random()
@@ -210,7 +210,7 @@ class Game:
 
                 if fruit.is_hit(current_position):
                     path = MEDIA_PATH / 'sprites' / ('half_' + fruit_name + '.png')
-                    fruit.set_img(pygame.image.load(path))
+                    fruit.set_img(pygame.transform.scale(pygame.image.load(path), (160, 160)))
                     fruit.set_speed_x(fruit.get_speed_x() + fruit.get_speed_x_random())
                     self.player.set_score(self.player.get_score() + 1)
                     self.score_text = self.font.render(str(self.player.get_score()), True, BLACK, WHITE)
