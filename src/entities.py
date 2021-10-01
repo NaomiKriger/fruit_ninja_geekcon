@@ -14,6 +14,7 @@ class Player:
     def __init__(self, player_name: str):
         self.player_name = player_name
         self.score = 0
+        self.missed_count = 5
 
     def get_score(self) -> int:
         return self.score
@@ -37,14 +38,14 @@ class Cursor:
 
 class FruitCollection:
     def __init__(self, *args):
-        for ftype in args:
-            self.__dict__[ftype] = None
+        for fruit_type in args:
+            self.__dict__[fruit_type] = None
 
-    def get_fruit(self, ftype: str):
-        return self.__dict__[ftype]
+    def get_fruit(self, fruit_type: str):
+        return self.__dict__[fruit_type]
 
-    def set_fruit(self, ftype: str, value) -> None:
-        self.__dict__[ftype] = value
+    def set_fruit(self, fruit_type: str, value) -> None:
+        self.__dict__[fruit_type] = value
 
     def get_all(self) -> dict:
         return self.__dict__
@@ -52,7 +53,7 @@ class FruitCollection:
 
 class Fruit:
     def __init__(self, fruit_type: str, img_path: Path):
-        self.ftype = fruit_type
+        self.fruit_type = fruit_type
         self.img = pygame.transform.scale(pygame.image.load(img_path), (160, 160))
         self.x = random.randint(0, WIDTH)
         self.y = HEIGHT
@@ -179,6 +180,9 @@ class Game:
         for fruit in FRUITS:
             Fruit.generate_random_fruit(self.fruit_collection, fruit)
 
+        self.run_game()
+
+    def run_game(self) -> None:
         while self.keep_going:
             self.surface.fill(WHITE)
             self.surface.blit(self.score_text, (0, 0))
@@ -200,10 +204,18 @@ class Game:
                 fruit.set_speed_y(fruit.speed_y + (g * dt))
                 fruit.t += 1
 
-                if fruit.get_y() > HEIGHT:
+                if fruit.get_x() < 0 or fruit.get_x() > WIDTH:
                     Fruit.generate_random_fruit(self.fruit_collection, fruit_name)
-                else:
+                if fruit.get_y() <= HEIGHT:
                     self.surface.blit(fruit.get_img(), fruit.get_position())
+                else:
+                    if not fruit.hit:
+                        self.player.missed_count -= 1
+                    if self.player.missed_count == 0:
+                        pygame.display.update()
+                        self.keep_going = False
+                    missed_text = self.font.render(str(self.player.missed_count), True, (255, 0, 0), WHITE)
+                    Fruit.generate_random_fruit(self.fruit_collection, fruit_name)
 
                 current_position = self.cursor.get_current_position()
                 self.cursor.draw(self.surface)
