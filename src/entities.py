@@ -1,6 +1,6 @@
 import random
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, List
 
 import pygame
 from pygame import image
@@ -9,20 +9,16 @@ from pygame.surface import Surface
 from constants import MEDIA_PATH
 
 
-class Game:
-    def __init__(
-            self,
-            surface: Surface,
-            width: int,
-            height: int,
-            score: int = 0,
-            missed_count: int = 5
-    ):
-        pass
-
-
 class Player:
-    pass
+    def __init__(self, player_name: str):
+        self.player_name = player_name
+        self.score = 0
+
+    def get_score(self) -> int:
+        return self.score
+
+    def set_score(self, value: int) -> None:
+        self.score = value
 
 
 class Cursor:
@@ -105,4 +101,16 @@ class Fruit:
         else:
             collection.get_fruit(ftype).set_throw(False)
 
+
+class Game:
+    def __init__(
+            self,
+            surface: Surface,
+            width: int,
+            height: int,
+            players: List[Player],
+            score: int = 0,
+            missed_count: int = 5
+    ):
+        pass
 

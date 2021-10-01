@@ -5,9 +5,10 @@ import pygame
 from pygame.surface import Surface
 
 from constants import WIDTH, HEIGHT, WHITE, MEDIA_PATH, BLACK, GLARE_SPRITE, FRUITS, CLOCK, FPS, g
-from entities import Fruit, FruitCollection
+from entities import Fruit, FruitCollection, Player
 
 score = 0
+player = Player('Player1')
 
 pygame.init()
 gameDisplay = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -16,7 +17,7 @@ font = pygame.font.Font(
     MEDIA_PATH / 'fonts' / 'comic.ttf',
     32,
 )
-score_text = font.render(str(score), True, BLACK, WHITE)
+score_text = font.render(str(player.get_score()), True, BLACK, WHITE)
 
 fruit_collection = FruitCollection()
 
@@ -32,7 +33,7 @@ pygame.display.update()
 
 
 def game_loop():
-    global score_text, score
+    global score_text, player
     gameDisplay.fill(WHITE)
     gameDisplay.blit(score_text, (0, 0))
     for key, value in fruit_collection.get_all().items():
@@ -54,8 +55,8 @@ def game_loop():
                 path = MEDIA_PATH / 'sprites' / ('half_' + key + '.png')
                 value.set_img(pygame.image.load(path))
                 value.set_speed_x(value.get_speed_x() + 10)
-                score += 1
-                score_text = font.render(str(score), True, BLACK, WHITE)
+                player.set_score(player.get_score() + 1)
+                score_text = font.render(str(player.get_score()), True, BLACK, WHITE)
                 value.hit = True
 
         else:
