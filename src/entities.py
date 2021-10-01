@@ -141,7 +141,7 @@ class Fruit:
             collection.get_fruit(fruit_type).set_throw(False)
 
 
-class Game:
+class PlayTime:
     def __init__(
             self,
             width: int,
@@ -154,6 +154,7 @@ class Game:
         self.surface = None
         self.font = None
         self.score_text = None
+        self.missed_text = None
         self.fruit_collection = FruitCollection()
         self.cursor = None
         self.keep_going = True
@@ -174,6 +175,7 @@ class Game:
             32,
         )
         self.score_text = self.font.render(str(self.player.get_score()), True, BLACK, WHITE)
+        self.missed_text = self.font.render(str(self.player.missed_count), True, (255, 0, 0), WHITE)
         self.surface = pygame.display.set_mode((WIDTH, HEIGHT))
         self.cursor = Cursor(pygame.mouse)
 
@@ -186,6 +188,7 @@ class Game:
         while self.keep_going:
             self.surface.fill(WHITE)
             self.surface.blit(self.score_text, (0, 0))
+            self.surface.blit(self.missed_text, (0, 50))
             self.throw_fruit()
 
             pygame.display.update()
@@ -214,7 +217,7 @@ class Game:
                     if self.player.missed_count == 0:
                         pygame.display.update()
                         self.keep_going = False
-                    missed_text = self.font.render(str(self.player.missed_count), True, (255, 0, 0), WHITE)
+                    self.missed_text = self.font.render(str(self.player.missed_count), True, (255, 0, 0), WHITE)
                     Fruit.generate_random_fruit(self.fruit_collection, fruit_name)
 
                 current_position = self.cursor.get_current_position()
