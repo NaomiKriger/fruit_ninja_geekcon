@@ -23,7 +23,7 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 CURSOR_COLOR = (209, 238, 239)
 clock = pygame.time.Clock()
-g = 84
+g = 35
 score = 0
 FPS = 60
 SPF = 1 / FPS
@@ -39,27 +39,22 @@ font = pygame.font.Font(
 )
 score_text = font.render(str(score), True, BLACK, WHITE)
 
+def get_speed_x_random():
+    speed_x_random = random.randint(-1000, 1000) * 10 / 1000
+
+    while -0.1 < speed_x_random < 0.1:
+        speed_x_random = random.randint(-1000, 1000) * 10 / 1000
+
+    return speed_x_random
 
 def generate_random_fruit(fruit: str) -> None:
     path = MEDIA_PATH / 'sprites' / (fruit + '.png')
-    seconds_till_top = 5
     data[fruit] = {
         'img': pygame.image.load(path),
         'x': random.randint(0, WIDTH),
-        'y': 0,
-        'speed_x': 0,#random.randint(-1000, 1000)*2/1000,
-        'speed_y': -420,#-HEIGHT / seconds_till_top,
-        # x[m] = x0[m] + v[m/s]*t[s] + 1/2(a[m/s^2]*t^2[s^2])
-        # v = (x1 - x0) / dt
-        # v = (0 - HEIGHT) / seconds_till_top
-        # t=5, g=? v0=?, x0=1050, x1=0, v1=0,
-        #
-        # 0 = 1050 + -25g + g25/2
-        # 0 = 2100 - 25g
-        # v = -1050/5 +g*5/2
-        # 0 = v0 + g*5
-
-
+        'y': HEIGHT,
+        'speed_x': get_speed_x_random(),
+        'speed_y': -1600 + random.randint(-300, 300),
         'throw': False,
         't': 0,
         'hit': False,
@@ -78,7 +73,6 @@ def paint_cursor(surface: Surface, position: Tuple[int, int]) -> None:
 data = {}
 for fruit in FRUITS:
     generate_random_fruit(fruit)
-    break
 
 pygame.display.update()
 
@@ -89,9 +83,10 @@ def game_loop():
     gameDisplay.blit(score_text, (0, 0))
     for key, value in data.items():
         if value['throw']:
+            dt = SPF*value["t"]
             value['x'] = int(value['x'] + value['speed_x'])
-            value['y'] = int(HEIGHT + value['speed_y']*(SPF*value["t"]))
-            value['speed_y'] = value['speed_y'] + (g * SPF * value["t"])
+            value['y'] = int(HEIGHT + value['speed_y']*(dt))
+            value['speed_y'] = value['speed_y'] + (g * dt)
             value['t'] += 1
             print(f"{int(value['speed_y'])}, {value['t']}, {int(value['y'])}")
 
