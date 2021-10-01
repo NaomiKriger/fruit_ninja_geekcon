@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 from typing import Tuple
 
+import numpy
 import pygame
 from pygame import image
 from pygame.surface import Surface
@@ -21,16 +22,36 @@ class Player:
     def set_score(self, value: int) -> None:
         self.score = value
 
+import cv2
+
+zeros_and_a_one = numpy.ndarray((720,1280,3))
+for col in zeros_and_a_one:
+    for pixel in col:
+        pixel[0] = 1.0
+        pixel[1] = 1.0
+        pixel[2] = 1.0
+
 
 class Cursor:
-    def __init__(self, mouse_obj):
-        self.mouse_obj = mouse_obj
+    def __init__(self):
+        self.cap = cv2.VideoCapture(1)  # (0) is the laptop's cam, (1) is the external webcam
 
-    def get_current_position(self) -> Tuple[int, int]:
-        return self.mouse_obj.get_pos()
+    def get_blue_blob_position(self,):
+        ret, frame = self.cap.read()
+        frame_2 = frame * [1, 0, 0]
 
-    def draw(self, surface: Surface) -> None:
-        x_coor, y_coor = self.mouse_obj.get_pos()
+        gray_full = cv2.cvtColor(numpy.uint8(frame_2), cv2.COLOR_RGB2GRAY)
+        gray_full_final = cv2.GaussianBlur(gray_full, (31, 31), 0)
+        (_, _, _, (x_coor, y_coor)) = cv2.minMaxLoc(gray_full_final)
+        # cv2.circle(gray_full_final, maxLoc_f, 30, (0, 0, 255), 2)
+        # print(maxVal_f, maxLoc_f)
+        # cv2.imshow("Robust", numpy.uint8(frame_2))
+
+        return WIDTH - x_coor, y_coor
+
+
+    def draw(self, surface: Surface, current_position) -> None:
+        x_coor, y_coor = current_position
         center_x, center_y = GLARE_SPRITE.get_width() // 2, GLARE_SPRITE.get_height() //2
         surface.blit(GLARE_SPRITE, (x_coor - center_x, y_coor - center_y))
 
@@ -174,7 +195,7 @@ class Game:
         )
         self.score_text = self.font.render(str(self.player.get_score()), True, BLACK, WHITE)
         self.surface = pygame.display.set_mode((WIDTH, HEIGHT))
-        self.cursor = Cursor(pygame.mouse)
+        self.cursor = Cursor()
 
         for fruit in FRUITS:
             Fruit.generate_random_fruit(self.fruit_collection, fruit)
@@ -192,6 +213,9 @@ class Game:
                     sys.exit()
 
     def throw_fruit(self) -> None:
+        current_position = self.cursor.get_blue_blob_position()
+        self.cursor.draw(self.surface, current_position)
+
         for fruit_name, fruit in self.fruit_collection.get_all().items():
             if fruit.get_throw():
                 dt = SPF * fruit.t
@@ -204,9 +228,6 @@ class Game:
                     Fruit.generate_random_fruit(self.fruit_collection, fruit_name)
                 else:
                     self.surface.blit(fruit.get_img(), fruit.get_position())
-
-                current_position = self.cursor.get_current_position()
-                self.cursor.draw(self.surface)
 
                 if fruit.is_hit(current_position):
                     path = MEDIA_PATH / 'sprites' / ('half_' + fruit_name + '.png')
