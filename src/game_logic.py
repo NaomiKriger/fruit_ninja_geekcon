@@ -1,28 +1,13 @@
-import random
 import sys
-from pathlib import Path
 from typing import Tuple
 
 import pygame
 from pygame.surface import Surface
 
-from entities import Fruit
+from constants import WIDTH, HEIGHT, WHITE, MEDIA_PATH, BLACK, GLARE_SPRITE, FRUITS, CLOCK, FPS, g
+from entities import Fruit, FruitCollection
 
-MEDIA_PATH = Path(__file__).parent / 'media'
-GLARE_SPRITE = pygame.transform.scale(
-    pygame.image.load(MEDIA_PATH / 'sprites' / 'glare.png'),
-    (118, 101)
-)
-WIDTH = 500
-HEIGHT = 700
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-CURSOR_COLOR = (209, 238, 239)
-clock = pygame.time.Clock()
-g = 1
 score = 0
-FPS = 13
-FRUITS = ['watermelon', 'orange', 'apple']
 
 pygame.init()
 gameDisplay = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -33,24 +18,15 @@ font = pygame.font.Font(
 )
 score_text = font.render(str(score), True, BLACK, WHITE)
 
-
-def generate_random_fruit(fruit_type: str) -> None:
-    path = MEDIA_PATH / 'sprites' / (fruit_type + '.png')
-    data[fruit_type] = Fruit(ftype=fruit_type, img_path=path)
-
-    if random.random() >= 0.75:
-        data[fruit_type].throw = True
-    else:
-        data[fruit_type].throw = False
+fruit_collection = FruitCollection()
 
 
 def paint_cursor(surface: Surface, position: Tuple[int, int]) -> None:
     surface.blit(GLARE_SPRITE, (position[0] - 59, position[1] - 50))
 
 
-data = {}
 for fruit in FRUITS:
-    generate_random_fruit(fruit)
+    Fruit.generate_random_fruit(fruit_collection, fruit)
 
 pygame.display.update()
 
@@ -59,34 +35,34 @@ def game_loop():
     global score_text, score
     gameDisplay.fill(WHITE)
     gameDisplay.blit(score_text, (0, 0))
-    for key, value in data.items():
-        if value.throw:
-            value.x = value.x + value.speed_x
-            value.y = value.y + value.speed_y
+    for key, value in fruit_collection.get_all().items():
+        if value.get_throw():
+            value.set_x(value.get_x() + value.get_speed_x())
+            value.set_y(value.get_y() + value.get_speed_y())
             value.speed_y += (g * value.t)
             value.t += 1
 
-            if value.y <= 800:
-                gameDisplay.blit(value.img, (value.x, value.y))
+            if value.get_y() <= 800:
+                gameDisplay.blit(value.get_img(), value.get_position())
             else:
-                generate_random_fruit(key)
+                Fruit.generate_random_fruit(fruit_collection, key)
 
             current_position = pygame.mouse.get_pos()
             paint_cursor(gameDisplay, current_position)
 
             if is_hit(current_position, value):
                 path = MEDIA_PATH / 'sprites' / ('half_' + key + '.png')
-                value.img = pygame.image.load(path)
-                value.speed_x += 10
+                value.set_img(pygame.image.load(path))
+                value.set_speed_x(value.get_speed_x() + 10)
                 score += 1
                 score_text = font.render(str(score), True, BLACK, WHITE)
                 value.hit = True
 
         else:
-            generate_random_fruit(key)
+            Fruit.generate_random_fruit(fruit_collection, key)
 
     pygame.display.update()
-    clock.tick(FPS)
+    CLOCK.tick(FPS)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -96,8 +72,8 @@ def game_loop():
 def is_hit(current_position, value):
     return all([
         not value.hit,
-        current_position[0] > value.x,
-        current_position[0] < value.x + 60,
-        current_position[1] > value.y,
-        current_position[1] < value.y + 60,
+        current_position[0] > value.get_x(),
+        current_position[0] < value.get_x() + 60,
+        current_position[1] > value.get_y(),
+        current_position[1] < value.get_y() + 60,
     ])
