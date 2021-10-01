@@ -1,24 +1,33 @@
 import random
+import sys
 from pathlib import Path
 from typing import Tuple, List
 
 import pygame
 from pygame import image
+from pygame.font import Font
 from pygame.surface import Surface
 
-from constants import MEDIA_PATH
+from constants import MEDIA_PATH, WHITE, BLACK, FRUITS, CLOCK, FPS, WIDTH, HEIGHT, g
 
 
 class Player:
     def __init__(self, player_name: str):
         self.player_name = player_name
         self.score = 0
+        self.missed_count = 5
 
     def get_score(self) -> int:
         return self.score
 
     def set_score(self, value: int) -> None:
         self.score = value
+
+    def get_missed_count(self) -> int:
+        return self.missed_count
+
+    def set_missed_count(self, value: int) -> None:
+        self.missed_count = value
 
 
 class Cursor:
@@ -91,6 +100,15 @@ class Fruit:
     def set_throw(self, value: bool) -> None:
         self.throw = value
 
+    def is_hit(self, current_position: Tuple[int, int]) -> bool:
+        return all([
+            not self.hit,
+            current_position[0] > self.get_x(),
+            current_position[0] < self.get_x() + 60,
+            current_position[1] > self.get_y(),
+            current_position[1] < self.get_y() + 60,
+        ])
+
     @staticmethod
     def generate_random_fruit(collection: FruitCollection, ftype: str) -> None:
         path = MEDIA_PATH / 'sprites' / (ftype + '.png')
@@ -105,12 +123,76 @@ class Fruit:
 class Game:
     def __init__(
             self,
-            surface: Surface,
             width: int,
             height: int,
-            players: List[Player],
-            score: int = 0,
-            missed_count: int = 5
+            player: Player
     ):
-        pass
+        self.width = width
+        self.height = height
+        self.player = player
+        self.surface = None
+        self.font = None
+        self.fruit_collection = FruitCollection()
+        self.cursor = None
+        self.keep_going = True
+
+    def get_width(self) -> int:
+        return self.width
+
+    def get_height(self) -> int:
+        return self.height
+
+    def get_display_size(self) -> Tuple[int, int]:
+        return self.width, self.height
+
+    def init_game(self):
+        pygame.init()
+        self.font = pygame.font.Font(
+            MEDIA_PATH / 'fonts' / 'comic.ttf',
+            32,
+        )
+        score_text = self.font.render(str(self.player.get_score()), True, BLACK, WHITE)
+        self.surface = pygame.display.set_mode((WIDTH, HEIGHT))
+
+        for fruit in FRUITS:
+            Fruit.generate_random_fruit(self.fruit_collection, fruit)
+
+        while self.keep_going:
+            self.surface.fill(WHITE)
+            self.surface.blit(score_text, (0, 0))
+            self.throw_fruit()
+
+            pygame.display.update()
+            CLOCK.tick(FPS)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
+
+    def throw_fruit(self) -> None:
+        for key, value in self.fruit_collection.get_all().items():
+            if value.get_throw():
+                value.set_x(value.get_x() + value.get_speed_x())
+                value.set_y(value.get_y() + value.get_speed_y())
+                value.speed_y += (g * value.t)
+                value.t += 1
+
+                if value.get_y() <= 800:
+                    self.surface.blit(value.get_img(), value.get_position())
+                else:
+                    Fruit.generate_random_fruit(self.fruit_collection, key)
+
+                current_position = pygame.mouse.get_pos()
+                # paint_cursor(gameDisplay, current_position)
+
+                if value.is_hit(current_position):
+                    path = MEDIA_PATH / 'sprites' / ('half_' + key + '.png')
+                    value.set_img(pygame.image.load(path))
+                    value.set_speed_x(value.get_speed_x() + 10)
+                    self.player.set_score(self.player.get_score() + 1)
+                    score_text = self.font.render(str(self.player.get_score()), True, BLACK, WHITE)
+                    value.hit = True
+
+            else:
+                Fruit.generate_random_fruit(self.fruit_collection, key)
 
