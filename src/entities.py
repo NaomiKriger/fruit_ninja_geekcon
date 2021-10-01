@@ -132,6 +132,7 @@ class Game:
         self.player = player
         self.surface = None
         self.font = None
+        self.score_text = None
         self.fruit_collection = FruitCollection()
         self.cursor = None
         self.keep_going = True
@@ -151,7 +152,7 @@ class Game:
             MEDIA_PATH / 'fonts' / 'comic.ttf',
             32,
         )
-        score_text = self.font.render(str(self.player.get_score()), True, BLACK, WHITE)
+        self.score_text = self.font.render(str(self.player.get_score()), True, BLACK, WHITE)
         self.surface = pygame.display.set_mode((WIDTH, HEIGHT))
 
         for fruit in FRUITS:
@@ -159,7 +160,7 @@ class Game:
 
         while self.keep_going:
             self.surface.fill(WHITE)
-            self.surface.blit(score_text, (0, 0))
+            self.surface.blit(self.score_text, (0, 0))
             self.throw_fruit()
 
             pygame.display.update()
@@ -190,7 +191,7 @@ class Game:
                     value.set_img(pygame.image.load(path))
                     value.set_speed_x(value.get_speed_x() + 10)
                     self.player.set_score(self.player.get_score() + 1)
-                    score_text = self.font.render(str(self.player.get_score()), True, BLACK, WHITE)
+                    self.score_text = self.font.render(str(self.player.get_score()), True, BLACK, WHITE)
                     value.hit = True
 
             else:
