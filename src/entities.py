@@ -7,7 +7,7 @@ import pygame
 from pygame import image
 from pygame.surface import Surface
 
-from constants import MEDIA_PATH, WHITE, BLACK, FRUITS, CLOCK, FPS, WIDTH, HEIGHT, g, GLARE_SPRITE
+from constants import MEDIA_PATH, WHITE, BLACK, FRUITS, CLOCK, FPS, WIDTH, HEIGHT, g, GLARE_SPRITE, SPF
 
 
 class Player:
@@ -51,13 +51,13 @@ class FruitCollection:
 
 
 class Fruit:
-    def __init__(self, ftype: str, img_path: Path):
-        self.ftype = ftype
+    def __init__(self, fruit_type: str, img_path: Path):
+        self.ftype = fruit_type
         self.img = pygame.image.load(img_path)
-        self.x = random.randint(100, 500)
-        self.y = 800
-        self.speed_x = random.randint(-10, 10)
-        self.speed_y = random.randint(-80, -60)
+        self.x = random.randint(0, WIDTH)
+        self.y = HEIGHT
+        self.speed_x = self.get_speed_x_random()
+        self.speed_y = -1600 + random.randint(-300, 300)
         self.throw = False
         self.t = 0
         self.hit = False
@@ -80,11 +80,14 @@ class Fruit:
     def get_speed_x(self) -> int:
         return self.speed_x
 
-    def set_speed_x(self, value: int) -> None:
+    def set_speed_x(self, value: float) -> None:
         self.speed_x = value
 
     def get_speed_y(self) -> int:
         return self.speed_y
+
+    def set_speed_y(self, value: int) -> int:
+        self.speed_y = value
 
     def get_img(self) -> image:
         return self.img
@@ -109,10 +112,27 @@ class Fruit:
                 current_y < self.get_y() + range_y,
             ])
 
+    def get_x_location(self):
+        current_x = int(self.get_x() + self.get_speed_x())
+        if current_x > WIDTH or current_x < 0:
+            self.set_speed_x(-1 * self.get_speed_x() * 0.9)
+            current_x = int(self.get_x() + self.get_speed_x())
+            self.set_speed_y(self.get_speed_y() - 10)
+        return current_x
+
+    @staticmethod
+    def get_speed_x_random():
+        speed_x_random = random.randint(-1000, 1000) * 10 / 1000
+
+        while -0.1 < speed_x_random < 0.1:
+            speed_x_random = random.randint(-1000, 1000) * 10 / 1000
+
+        return speed_x_random
+
     @staticmethod
     def generate_random_fruit(collection: FruitCollection, ftype: str) -> None:
         path = MEDIA_PATH / 'sprites' / (ftype + '.png')
-        collection.set_fruit(ftype, Fruit(ftype=ftype, img_path=path))
+        collection.set_fruit(ftype, Fruit(fruit_type=ftype, img_path=path))
 
         if random.random() >= 0.75:
             collection.get_fruit(ftype).set_throw(True)
@@ -172,29 +192,30 @@ class Game:
                     sys.exit()
 
     def throw_fruit(self) -> None:
-        for key, value in self.fruit_collection.get_all().items():
-            if value.get_throw():
-                value.set_x(value.get_x() + value.get_speed_x())
-                value.set_y(value.get_y() + value.get_speed_y())
-                value.speed_y += (g * value.t)
-                value.t += 1
+        for fruit_name, fruit in self.fruit_collection.get_all().items():
+            if fruit.get_throw():
+                dt = SPF * fruit.t
+                fruit.set_x(fruit.get_x_location())
+                fruit.set_y(int(HEIGHT + fruit.get_speed_y() * dt))
+                fruit.set_speed_y(fruit.speed_y + (g * dt))
+                fruit.t += 1
 
-                if value.get_y() <= self.get_height():
-                    self.surface.blit(value.get_img(), value.get_position())
+                if fruit.get_y() > HEIGHT:
+                    Fruit.generate_random_fruit(self.fruit_collection, fruit_name)
                 else:
-                    Fruit.generate_random_fruit(self.fruit_collection, key)
+                    self.surface.blit(fruit.get_img(), fruit.get_position())
 
                 current_position = self.cursor.get_current_position()
                 self.cursor.draw(self.surface)
 
-                if value.is_hit(current_position):
-                    path = MEDIA_PATH / 'sprites' / ('half_' + key + '.png')
-                    value.set_img(pygame.image.load(path))
-                    value.set_speed_x(value.get_speed_x() + 10)
+                if fruit.is_hit(current_position):
+                    path = MEDIA_PATH / 'sprites' / ('half_' + fruit_name + '.png')
+                    fruit.set_img(pygame.image.load(path))
+                    fruit.set_speed_x(fruit.get_speed_x() + fruit.get_speed_x_random())
                     self.player.set_score(self.player.get_score() + 1)
                     self.score_text = self.font.render(str(self.player.get_score()), True, BLACK, WHITE)
-                    value.hit = True
+                    fruit.hit = True
 
             else:
-                Fruit.generate_random_fruit(self.fruit_collection, key)
+                Fruit.generate_random_fruit(self.fruit_collection, fruit_name)
 

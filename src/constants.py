@@ -1,18 +1,23 @@
 from pathlib import Path
 
 import pygame
+import tkinter as tk
+
+root = tk.Tk()
 
 MEDIA_PATH = Path(__file__).parent / 'media'
 GLARE_SPRITE = pygame.transform.scale(
     pygame.image.load(MEDIA_PATH / 'sprites' / 'glare.png'),
     (118, 101)
 )
-WIDTH = 500
-HEIGHT = 700
+
+WIDTH = root.winfo_screenwidth()
+HEIGHT = root.winfo_screenheight()
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 CLOCK = pygame.time.Clock()
-g = 1
+g = 35
 
-FPS = 13
+FPS = 60
+SPF = 1 / FPS
 FRUITS = ['watermelon', 'orange', 'apple']
