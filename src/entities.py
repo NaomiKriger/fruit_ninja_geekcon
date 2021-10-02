@@ -2,7 +2,10 @@ import random
 import sys
 from pathlib import Path
 from typing import Tuple, List
+import cv2
 
+
+import numpy
 import pygame
 from pygame import image
 from pygame.event import Event
@@ -24,12 +27,22 @@ class Player:
         self.score = value
 
 
-class Cursor:
-    def __init__(self, mouse_obj):
-        self.mouse_obj = mouse_obj
 
-    def get_current_position(self) -> Tuple[int, int]:
-        return self.mouse_obj.get_pos()
+class Cursor:
+    def __init__(self):
+        self.cap = cv2.VideoCapture(1)  # (0) is the laptop's cam, (1) is the external webcam
+
+    def get_blue_blob_position(self):
+        ret, frame = self.cap.read()
+        frame_2 = frame * [1, 0, 0]
+
+        gray_full = cv2.cvtColor(numpy.uint8(frame_2), cv2.COLOR_BGR2GRAY)
+        gray_full_final = cv2.GaussianBlur(gray_full, (31, 31), 0)
+        _, _, _, (x_coor, y_coor) = cv2.minMaxLoc(gray_full_final)
+
+
+        return WIDTH - x_coor, y_coor
+
 
     def draw(self, surface: Surface) -> None:
         x_coor, y_coor = self.mouse_obj.get_pos()
