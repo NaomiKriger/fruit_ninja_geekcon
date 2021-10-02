@@ -63,7 +63,7 @@ class Fruit:
     def __init__(self, fruit_type: str, img_path: Path):
         self.ftype = fruit_type
         self.img = pygame.transform.scale(pygame.image.load(img_path), (160, 160))
-        self.x = random.randint(0, WIDTH)
+        self.x = random.randint(0, WIDTH-160)
         self.y = HEIGHT
         self.speed_x = self.get_speed_x_random()
         self.speed_y = -1600 + random.randint(-300, 300)
@@ -123,7 +123,7 @@ class Fruit:
 
     def get_x_location(self):
         current_x = int(self.get_x() + self.get_speed_x())
-        if current_x > WIDTH or current_x < 0:
+        if current_x > (WIDTH - 160) or current_x < 0:
             self.set_speed_x(-1 * self.get_speed_x() * 0.9)
             current_x = int(self.get_x() + self.get_speed_x())
             self.set_speed_y(self.get_speed_y() - 10)
@@ -131,7 +131,7 @@ class Fruit:
 
     @staticmethod
     def get_speed_x_random():
-        speed_x_random = random.randint(-1000, 1000) * 10 / 1000
+        speed_x_random = random.randint(-1000, 1000) * 20 / 1000
 
         while -0.1 < speed_x_random < 0.1:
             speed_x_random = random.randint(-1000, 1000) * 10 / 1000
