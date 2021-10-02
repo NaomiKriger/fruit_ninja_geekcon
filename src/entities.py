@@ -1,21 +1,23 @@
 import random
 import sys
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, List
 
 import cv2
 import numpy
 import pygame
 from pygame import image
+from pygame.event import Event
 from pygame.surface import Surface
 
-from constants import MEDIA_PATH, WHITE, BLACK, FRUITS, CLOCK, FPS, WIDTH, HEIGHT, g, GLARE_SPRITE, SPF
+from constants import MEDIA_PATH, WHITE, BLACK, FRUITS, CLOCK, FPS, WIDTH, HEIGHT, g, GLARE_SPRITE, SPF, RED, DEV_MODE
 
 
 class Player:
     def __init__(self, player_name: str):
         self.player_name = player_name
         self.score = 0
+        self.missed_count = 5
 
     def get_score(self) -> int:
         return self.score
@@ -25,19 +27,26 @@ class Player:
 
 
 class Cursor:
-    def __init__(self):
-        self.cap = cv2.VideoCapture(0) # (0) is the laptop's cam, (1) is the external webcam
-        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 2)
-        self.center_x, self.center_y = GLARE_SPRITE.get_width() // 2, GLARE_SPRITE.get_height() // 2
+    if DEV_MODE:
+        def __init__(self, mouse_obj):
+            self.mouse_obj = mouse_obj
+            self.center_x, self.center_y = GLARE_SPRITE.get_width() // 2, GLARE_SPRITE.get_height() // 2
 
-    def get_blue_blob_position(self):
-        _, frame = self.cap.read()
-        gray_full_final = cv2.medianBlur(cv2.split(frame)[1], 5, 0)
+        def get_current_position(self):
+            return self.mouse_obj.get_pos()
+    else:
+        def __init__(self):
+            self.cap = cv2.VideoCapture(0)  # (0) is the laptop's cam, (1) is the external webcam
+            self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 2)
+            self.center_x, self.center_y = GLARE_SPRITE.get_width() // 2, GLARE_SPRITE.get_height() // 2
 
-        _, _, _, (x_coor, y_coor) = cv2.minMaxLoc(gray_full_final)
-        cv2.imshow("Robust", numpy.uint8(gray_full_final))
-        return WIDTH - x_coor, y_coor
+        def get_blue_blob_position(self):
+            _, frame = self.cap.read()
+            gray_full_final = cv2.medianBlur(cv2.split(frame)[1], 5, 0)
 
+            _, _, _, (x_coor, y_coor) = cv2.minMaxLoc(gray_full_final)
+            cv2.imshow("Robust", numpy.uint8(gray_full_final))
+            return WIDTH - x_coor, y_coor
 
     def draw(self, surface: Surface, current_position) -> None:
         x_coor, y_coor = current_position
@@ -46,14 +55,14 @@ class Cursor:
 
 class FruitCollection:
     def __init__(self, *args):
-        for ftype in args:
-            self.__dict__[ftype] = None
+        for fruit_type in args:
+            self.__dict__[fruit_type] = None
 
-    def get_fruit(self, ftype: str):
-        return self.__dict__[ftype]
+    def get_fruit(self, fruit_type: str):
+        return self.__dict__[fruit_type]
 
-    def set_fruit(self, ftype: str, value) -> None:
-        self.__dict__[ftype] = value
+    def set_fruit(self, fruit_type: str, value) -> None:
+        self.__dict__[fruit_type] = value
 
     def get_all(self) -> dict:
         return self.__dict__
@@ -61,9 +70,9 @@ class FruitCollection:
 
 class Fruit:
     def __init__(self, fruit_type: str, img_path: Path):
-        self.ftype = fruit_type
+        self.fruit_type = fruit_type
         self.img = pygame.transform.scale(pygame.image.load(img_path), (160, 160))
-        self.x = random.randint(0, WIDTH-160)
+        self.x = random.randint(0, WIDTH - 160)
         self.y = HEIGHT
         self.speed_x = self.get_speed_x_random()
         self.speed_y = -500 + random.randint(-100, 100)
@@ -86,7 +95,7 @@ class Fruit:
     def get_position(self) -> Tuple[int, int]:
         return self.get_x(), self.get_y()
 
-    def get_speed_x(self) -> int:
+    def get_speed_x(self) -> float:
         return self.speed_x
 
     def set_speed_x(self, value: float) -> None:
@@ -95,7 +104,7 @@ class Fruit:
     def get_speed_y(self) -> int:
         return self.speed_y
 
-    def set_speed_y(self, value: int) -> int:
+    def set_speed_y(self, value: float) -> None:
         self.speed_y = value
 
     def get_img(self) -> image:
@@ -111,15 +120,15 @@ class Fruit:
         self.throw = value
 
     def is_hit(self, current_position: Tuple[int, int]) -> bool:
-            current_x, current_y = current_position
-            range_x, range_y = self.img.get_width(), self.img.get_height()
-            return all([
-                not self.hit,
-                current_x > self.get_x(),
-                current_x < self.get_x() + range_x,
-                current_y > self.get_y(),
-                current_y < self.get_y() + range_y,
-            ])
+        current_x, current_y = current_position
+        range_x, range_y = self.img.get_width(), self.img.get_height()
+        return all([
+            not self.hit,
+            current_x > self.get_x(),
+            current_x < self.get_x() + range_x,
+            current_y > self.get_y(),
+            current_y < self.get_y() + range_y,
+        ])
 
     def get_x_location(self):
         current_x = int(self.get_x() + self.get_speed_x())
@@ -139,32 +148,30 @@ class Fruit:
         return speed_x_random
 
     @staticmethod
-    def generate_random_fruit(collection: FruitCollection, ftype: str) -> None:
-        path = MEDIA_PATH / 'sprites' / (ftype + '.png')
-        collection.set_fruit(ftype, Fruit(fruit_type=ftype, img_path=path))
+    def generate_random_fruit(collection: FruitCollection, fruit_type: str) -> None:
+        path = MEDIA_PATH / 'sprites' / (fruit_type + '.png')
+        collection.set_fruit(fruit_type, Fruit(fruit_type=fruit_type, img_path=path))
 
         if random.random() >= 0.75:
-            collection.get_fruit(ftype).set_throw(True)
+            collection.get_fruit(fruit_type).set_throw(True)
         else:
-            collection.get_fruit(ftype).set_throw(False)
+            collection.get_fruit(fruit_type).set_throw(False)
 
 
-class Game:
+class PlayTime:
     def __init__(
             self,
-            width: int,
-            height: int,
             player: Player
     ):
-        self.width = width
-        self.height = height
         self.player = player
-        self.surface = None
         self.font = None
         self.score_text = None
+        self.missed_text = None
         self.fruit_collection = FruitCollection()
         self.cursor = None
         self.keep_going = True
+        self.init_game()
+        self.populate_fruit_collection()
 
     def get_width(self) -> int:
         return self.width
@@ -175,34 +182,23 @@ class Game:
     def get_display_size(self) -> Tuple[int, int]:
         return self.width, self.height
 
+    def populate_fruit_collection(self):
+        for fruit in FRUITS:
+            Fruit.generate_random_fruit(self.fruit_collection, fruit)
+
     def init_game(self):
-        pygame.init()
+        if DEV_MODE:
+            self.cursor = Cursor(pygame.mouse)
+        else:
+            self.cursor = Cursor()
         self.font = pygame.font.Font(
             MEDIA_PATH / 'fonts' / 'comic.ttf',
             32,
         )
-        self.score_text = self.font.render(str(self.player.get_score()), True, BLACK, WHITE)
-        self.surface = pygame.display.set_mode((WIDTH, HEIGHT))
-        self.cursor = Cursor()
 
-        for fruit in FRUITS:
-            Fruit.generate_random_fruit(self.fruit_collection, fruit)
-
-        while self.keep_going:
-            self.surface.fill(WHITE)
-            self.surface.blit(self.score_text, (0, 0))
-            self.throw_fruit()
-
-            pygame.display.update()
-            CLOCK.tick(FPS)
-
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    sys.exit()
-
-    def throw_fruit(self) -> None:
-        current_position = self.cursor.get_blue_blob_position()
+    def throw_fruit(self, surface: Surface) -> bool:
         for fruit_name, fruit in self.fruit_collection.get_all().items():
+            current_position = self.cursor.get_current_position()
             if fruit.get_throw():
                 dt = SPF * fruit.t
                 fruit.set_x(fruit.get_x_location())
@@ -210,10 +206,22 @@ class Game:
                 fruit.set_speed_y(fruit.speed_y + (g * dt))
                 fruit.t += 1
 
-                if fruit.get_y() > HEIGHT:
+                if fruit.get_x() < 0 or fruit.get_x() > WIDTH:
                     Fruit.generate_random_fruit(self.fruit_collection, fruit_name)
+                if fruit.get_y() <= HEIGHT:
+                    surface.blit(fruit.get_img(), fruit.get_position())
                 else:
-                    self.surface.blit(fruit.get_img(), fruit.get_position())
+                    if not fruit.hit:
+                        self.player.missed_count -= 1
+                    if self.player.missed_count <= 0:
+                        self.keep_going = False
+                    self.missed_text = self.font.render(str(self.player.missed_count), True, (255, 0, 0), WHITE)
+                    Fruit.generate_random_fruit(self.fruit_collection, fruit_name)
+
+                if DEV_MODE:
+                    self.cursor.draw(surface, current_position)
+                else:
+                    self.cursor.draw(surface)
 
                 if fruit.is_hit(current_position):
                     path = MEDIA_PATH / 'sprites' / (fruit_name + '_hit' + '.png')
@@ -226,4 +234,65 @@ class Game:
             else:
                 Fruit.generate_random_fruit(self.fruit_collection, fruit_name)
 
-        self.cursor.draw(self.surface, current_position)
+        if DEV_MODE:
+            self.cursor.draw(surface, current_position)
+        else:
+            self.cursor.draw(surface)
+
+
+# Scenes management
+
+class Scene(object):
+    def __init__(self):
+        self.width = WIDTH
+        self.height = HEIGHT
+        self.cursor = None
+        self.player = Player('Player1')
+
+    def render(self, surface: Surface):
+        pass
+
+    def update(self, surface: Surface):
+        pass
+
+    def handle_events(self, events: List[Event]):
+        pass
+
+
+class PlayScene(Scene):
+    def __init__(self):
+        super().__init__()
+        self.score_text = None
+        self.missed_text = None
+        self.font = None
+        self.play_time = PlayTime(self.player)
+        self.keep_going = True
+
+    def render(self, surface):
+        self.font = pygame.font.Font(
+            MEDIA_PATH / 'fonts' / 'comic.ttf',
+            32,
+        )
+        self.score_text = self.font.render(str(self.player.get_score()), True, BLACK, WHITE)
+        self.missed_text = self.font.render(str(self.player.missed_count), True, RED, WHITE)
+
+        surface.fill(WHITE)
+        surface.blit(self.score_text, (0, 0))
+        surface.blit(self.missed_text, (0, 50))
+
+    def update(self, surface: Surface):
+        self.play_time.throw_fruit(surface)
+
+    def handle_events(self, events):
+        for event in events:
+            if event.type == pygame.QUIT:
+                sys.exit()
+
+
+class SceneManager:
+    def __init__(self):
+        self.go_to(PlayScene())
+
+    def go_to(self, scene):
+        self.scene = scene
+        self.scene.manager = self
