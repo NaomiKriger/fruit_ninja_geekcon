@@ -281,7 +281,10 @@ class PlayScene(Scene):
         if int(self.player.missed_count) > 0:
             surface.blit(pygame.image.load(BACKGROUND_IMG_PATH), (0, 0))
         else:
-            surface.blit(self.font.render("GAME OVER", True, RED, WHITE), (WIDTH/2-50, HEIGHT/2-20))
+            game_over_text = self.font.render("GAME OVER", True, RED, WHITE)
+            center_x = game_over_text.get_width() // 2
+            center_y = game_over_text.get_height() // 2
+            surface.blit(game_over_text, (WIDTH // 2 - center_x, HEIGHT // 2 - center_y))
         surface.blit(self.score_text, (0, 0))
         surface.blit(self.missed_text, (0, 50))
 
