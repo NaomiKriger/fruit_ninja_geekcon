@@ -20,7 +20,7 @@ RED = (255, 0, 0)
 CLOCK = pygame.time.Clock()
 g = 5
 
-DEV_MODE = True
+DEV_MODE = False
 
 FPS = 40
 SPF = 1 / FPS

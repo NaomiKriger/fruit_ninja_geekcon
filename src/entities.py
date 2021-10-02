@@ -18,7 +18,7 @@ class Player:
     def __init__(self, player_name: str):
         self.player_name = player_name
         self.score = 0
-        self.missed_count = 5
+        self.missed_count = 3
 
     def get_score(self) -> int:
         return self.score
@@ -41,7 +41,7 @@ class Cursor:
             self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 2)
             self.center_x, self.center_y = GLARE_SPRITE.get_width() // 2, GLARE_SPRITE.get_height() // 2
 
-        def get_blue_blob_position(self):
+        def get_current_position(self):
             _, frame = self.cap.read()
             gray_full_final = cv2.medianBlur(cv2.split(frame)[1], 5, 0)
 
@@ -198,8 +198,9 @@ class PlayTime:
         )
 
     def throw_fruit(self, surface: Surface) -> bool:
+        current_position = self.cursor.get_current_position()
+
         for fruit_name, fruit in self.fruit_collection.get_all().items():
-            current_position = self.cursor.get_current_position()
             if fruit.get_throw():
                 dt = SPF * fruit.t
                 fruit.set_x(fruit.get_x_location())
@@ -222,7 +223,7 @@ class PlayTime:
                 if DEV_MODE:
                     self.cursor.draw(surface, current_position)
                 else:
-                    self.cursor.draw(surface)
+                    self.cursor.draw(surface, current_position)
 
                 if fruit.is_hit(current_position):
                     path = MEDIA_PATH / 'sprites' / (fruit_name + '_hit' + '.png')
@@ -239,7 +240,7 @@ class PlayTime:
         if DEV_MODE:
             self.cursor.draw(surface, current_position)
         else:
-            self.cursor.draw(surface)
+            self.cursor.draw(surface, current_position)
 
 
 # Scenes management
