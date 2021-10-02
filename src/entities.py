@@ -2,8 +2,8 @@ import random
 import sys
 from pathlib import Path
 from typing import Tuple, List
-import cv2
 
+import cv2
 import numpy
 import pygame
 from pygame import image
@@ -75,7 +75,7 @@ class Fruit:
         self.x = random.randint(0, WIDTH - 160)
         self.y = HEIGHT
         self.speed_x = self.get_speed_x_random()
-        self.speed_y = -1600 + random.randint(-300, 300)
+        self.speed_y = -500 + random.randint(-100, 100)
         self.throw = False
         self.t = 0
         self.hit = False
@@ -224,7 +224,7 @@ class PlayTime:
                     self.cursor.draw(surface)
 
                 if fruit.is_hit(current_position):
-                    path = MEDIA_PATH / 'sprites' / ('half_' + fruit_name + '.png')
+                    path = MEDIA_PATH / 'sprites' / (fruit_name + '_hit' + '.png')
                     fruit.set_img(pygame.transform.scale(pygame.image.load(path), (160, 160)))
                     fruit.set_speed_x(fruit.get_speed_x() + fruit.get_speed_x_random())
                     self.player.set_score(self.player.get_score() + 1)

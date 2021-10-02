@@ -1,7 +1,7 @@
+import tkinter as tk
 from pathlib import Path
 
 import pygame
-import tkinter as tk
 
 root = tk.Tk()
 
@@ -17,10 +17,10 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 CLOCK = pygame.time.Clock()
-g = 35
+g = 5
 
 DEV_MODE = True
 
 FPS = 40
 SPF = 1 / FPS
-FRUITS = ['watermelon', 'orange', 'apple']
+FRUITS = ['hershko', 'shahar', 'ariel']
