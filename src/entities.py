@@ -24,27 +24,24 @@ class Player:
         self.score = value
 
 
-
 class Cursor:
     def __init__(self):
-        self.cap = cv2.VideoCapture(1)  # (0) is the laptop's cam, (1) is the external webcam
+        self.cap = cv2.VideoCapture(0) # (0) is the laptop's cam, (1) is the external webcam
+        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 2)
+        self.center_x, self.center_y = GLARE_SPRITE.get_width() // 2, GLARE_SPRITE.get_height() // 2
 
     def get_blue_blob_position(self):
-        ret, frame = self.cap.read()
-        frame_2 = frame * [1, 0, 0]
+        _, frame = self.cap.read()
+        gray_full_final = cv2.medianBlur(cv2.split(frame)[1], 5, 0)
 
-        gray_full = cv2.cvtColor(numpy.uint8(frame_2), cv2.COLOR_BGR2GRAY)
-        gray_full_final = cv2.GaussianBlur(gray_full, (31, 31), 0)
         _, _, _, (x_coor, y_coor) = cv2.minMaxLoc(gray_full_final)
-
-
+        cv2.imshow("Robust", numpy.uint8(gray_full_final))
         return WIDTH - x_coor, y_coor
 
 
     def draw(self, surface: Surface, current_position) -> None:
         x_coor, y_coor = current_position
-        center_x, center_y = GLARE_SPRITE.get_width() // 2, GLARE_SPRITE.get_height() //2
-        surface.blit(GLARE_SPRITE, (x_coor - center_x, y_coor - center_y))
+        surface.blit(GLARE_SPRITE, (x_coor - self.center_x, y_coor - self.center_y))
 
 
 class FruitCollection:
@@ -205,8 +202,6 @@ class Game:
 
     def throw_fruit(self) -> None:
         current_position = self.cursor.get_blue_blob_position()
-        self.cursor.draw(self.surface, current_position)
-
         for fruit_name, fruit in self.fruit_collection.get_all().items():
             if fruit.get_throw():
                 dt = SPF * fruit.t
@@ -231,3 +226,4 @@ class Game:
             else:
                 Fruit.generate_random_fruit(self.fruit_collection, fruit_name)
 
+        self.cursor.draw(self.surface, current_position)
