@@ -19,6 +19,8 @@ RED = (255, 0, 0)
 CLOCK = pygame.time.Clock()
 g = 35
 
+DEV_MODE = True
+
 FPS = 40
 SPF = 1 / FPS
 FRUITS = ['watermelon', 'orange', 'apple']

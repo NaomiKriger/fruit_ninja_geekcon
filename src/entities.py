@@ -10,7 +10,7 @@ from pygame import image
 from pygame.event import Event
 from pygame.surface import Surface
 
-from constants import MEDIA_PATH, WHITE, BLACK, FRUITS, CLOCK, FPS, WIDTH, HEIGHT, g, GLARE_SPRITE, SPF, RED
+from constants import MEDIA_PATH, WHITE, BLACK, FRUITS, CLOCK, FPS, WIDTH, HEIGHT, g, GLARE_SPRITE, SPF, RED, DEV_MODE
 
 
 class Player:
@@ -27,19 +27,26 @@ class Player:
 
 
 class Cursor:
-    def __init__(self):
-        self.cap = cv2.VideoCapture(0) # (0) is the laptop's cam, (1) is the external webcam
-        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 2)
-        self.center_x, self.center_y = GLARE_SPRITE.get_width() // 2, GLARE_SPRITE.get_height() // 2
+    if DEV_MODE:
+        def __init__(self, mouse_obj):
+            self.mouse_obj = mouse_obj
+            self.center_x, self.center_y = GLARE_SPRITE.get_width() // 2, GLARE_SPRITE.get_height() // 2
 
-    def get_blue_blob_position(self):
-        _, frame = self.cap.read()
-        gray_full_final = cv2.medianBlur(cv2.split(frame)[1], 5, 0)
+        def get_current_position(self):
+            return self.mouse_obj.get_pos()
+    else:
+        def __init__(self):
+            self.cap = cv2.VideoCapture(0)  # (0) is the laptop's cam, (1) is the external webcam
+            self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 2)
+            self.center_x, self.center_y = GLARE_SPRITE.get_width() // 2, GLARE_SPRITE.get_height() // 2
 
-        _, _, _, (x_coor, y_coor) = cv2.minMaxLoc(gray_full_final)
-        cv2.imshow("Robust", numpy.uint8(gray_full_final))
-        return WIDTH - x_coor, y_coor
+        def get_blue_blob_position(self):
+            _, frame = self.cap.read()
+            gray_full_final = cv2.medianBlur(cv2.split(frame)[1], 5, 0)
 
+            _, _, _, (x_coor, y_coor) = cv2.minMaxLoc(gray_full_final)
+            cv2.imshow("Robust", numpy.uint8(gray_full_final))
+            return WIDTH - x_coor, y_coor
 
     def draw(self, surface: Surface, current_position) -> None:
         x_coor, y_coor = current_position
@@ -65,7 +72,7 @@ class Fruit:
     def __init__(self, fruit_type: str, img_path: Path):
         self.fruit_type = fruit_type
         self.img = pygame.transform.scale(pygame.image.load(img_path), (160, 160))
-        self.x = random.randint(0, WIDTH-160)
+        self.x = random.randint(0, WIDTH - 160)
         self.y = HEIGHT
         self.speed_x = self.get_speed_x_random()
         self.speed_y = -1600 + random.randint(-300, 300)
@@ -180,7 +187,10 @@ class PlayTime:
             Fruit.generate_random_fruit(self.fruit_collection, fruit)
 
     def init_game(self):
-        self.cursor = Cursor(pygame.mouse)
+        if DEV_MODE:
+            self.cursor = Cursor(pygame.mouse)
+        else:
+            self.cursor = Cursor()
         self.font = pygame.font.Font(
             MEDIA_PATH / 'fonts' / 'comic.ttf',
             32,
@@ -188,6 +198,7 @@ class PlayTime:
 
     def throw_fruit(self, surface: Surface) -> bool:
         for fruit_name, fruit in self.fruit_collection.get_all().items():
+            current_position = self.cursor.get_current_position()
             if fruit.get_throw():
                 dt = SPF * fruit.t
                 fruit.set_x(fruit.get_x_location())
@@ -207,8 +218,10 @@ class PlayTime:
                     self.missed_text = self.font.render(str(self.player.missed_count), True, (255, 0, 0), WHITE)
                     Fruit.generate_random_fruit(self.fruit_collection, fruit_name)
 
-                current_position = self.cursor.get_current_position()
-                self.cursor.draw(surface)
+                if DEV_MODE:
+                    self.cursor.draw(surface, current_position)
+                else:
+                    self.cursor.draw(surface)
 
                 if fruit.is_hit(current_position):
                     path = MEDIA_PATH / 'sprites' / ('half_' + fruit_name + '.png')
@@ -221,7 +234,11 @@ class PlayTime:
             else:
                 Fruit.generate_random_fruit(self.fruit_collection, fruit_name)
 
-        self.cursor.draw(self.surface, current_position)
+        if DEV_MODE:
+            self.cursor.draw(surface, current_position)
+        else:
+            self.cursor.draw(surface)
+
 
 # Scenes management
 
@@ -265,9 +282,6 @@ class PlayScene(Scene):
 
     def update(self, surface: Surface):
         self.play_time.throw_fruit(surface)
-
-
-
 
     def handle_events(self, events):
         for event in events:
