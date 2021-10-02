@@ -10,7 +10,8 @@ from pygame import image
 from pygame.event import Event
 from pygame.surface import Surface
 
-from constants import MEDIA_PATH, WHITE, BLACK, FRUITS, CLOCK, FPS, WIDTH, HEIGHT, g, GLARE_SPRITE, SPF, RED, DEV_MODE
+from constants import MEDIA_PATH, WHITE, BLACK, FRUITS, CLOCK, FPS, WIDTH, HEIGHT, g, GLARE_SPRITE, SPF, RED, DEV_MODE, \
+    BACKGROUND_IMG_PATH
 
 
 class Player:
@@ -75,7 +76,7 @@ class Fruit:
         self.x = random.randint(0, WIDTH - 160)
         self.y = HEIGHT
         self.speed_x = self.get_speed_x_random()
-        self.speed_y = -500 + random.randint(-100, 100)
+        self.speed_y = -800 + random.randint(-100, 100)
         self.throw = False
         self.t = 0
         self.hit = False
@@ -227,7 +228,8 @@ class PlayTime:
                     path = MEDIA_PATH / 'sprites' / (fruit_name + '_hit' + '.png')
                     fruit.set_img(pygame.transform.scale(pygame.image.load(path), (160, 160)))
                     fruit.set_speed_x(fruit.get_speed_x() + fruit.get_speed_x_random())
-                    self.player.set_score(self.player.get_score() + 1)
+                    if self.player.missed_count > 0:
+                        self.player.set_score(self.player.get_score() + 1)
                     self.score_text = self.font.render(str(self.player.get_score()), True, BLACK, WHITE)
                     fruit.hit = True
 
@@ -275,8 +277,10 @@ class PlayScene(Scene):
         )
         self.score_text = self.font.render(str(self.player.get_score()), True, BLACK, WHITE)
         self.missed_text = self.font.render(str(self.player.missed_count), True, RED, WHITE)
-
-        surface.fill(WHITE)
+        if int(self.player.missed_count) > 0:
+            surface.blit(pygame.image.load(BACKGROUND_IMG_PATH), (0, 0))
+        else:
+            surface.blit(self.font.render("GAME OVER", True, RED, WHITE), (WIDTH/2-50, HEIGHT/2-20))
         surface.blit(self.score_text, (0, 0))
         surface.blit(self.missed_text, (0, 50))
 
@@ -287,6 +291,9 @@ class PlayScene(Scene):
         for event in events:
             if event.type == pygame.QUIT:
                 sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    self.__init__()
 
 
 class SceneManager:

@@ -10,6 +10,7 @@ GLARE_SPRITE = pygame.transform.scale(
     pygame.image.load(MEDIA_PATH / 'sprites' / 'glare.png'),
     (118, 101)
 )
+BACKGROUND_IMG_PATH = MEDIA_PATH / 'sprites' / 'background.jpg'
 
 WIDTH = root.winfo_screenwidth()
 HEIGHT = root.winfo_screenheight()
