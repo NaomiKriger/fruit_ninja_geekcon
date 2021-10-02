@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Tuple, List
 import cv2
 
-
 import numpy
 import pygame
 from pygame import image
@@ -27,27 +26,24 @@ class Player:
         self.score = value
 
 
-
 class Cursor:
     def __init__(self):
-        self.cap = cv2.VideoCapture(1)  # (0) is the laptop's cam, (1) is the external webcam
+        self.cap = cv2.VideoCapture(0) # (0) is the laptop's cam, (1) is the external webcam
+        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 2)
+        self.center_x, self.center_y = GLARE_SPRITE.get_width() // 2, GLARE_SPRITE.get_height() // 2
 
     def get_blue_blob_position(self):
-        ret, frame = self.cap.read()
-        frame_2 = frame * [1, 0, 0]
+        _, frame = self.cap.read()
+        gray_full_final = cv2.medianBlur(cv2.split(frame)[1], 5, 0)
 
-        gray_full = cv2.cvtColor(numpy.uint8(frame_2), cv2.COLOR_BGR2GRAY)
-        gray_full_final = cv2.GaussianBlur(gray_full, (31, 31), 0)
         _, _, _, (x_coor, y_coor) = cv2.minMaxLoc(gray_full_final)
-
-
+        cv2.imshow("Robust", numpy.uint8(gray_full_final))
         return WIDTH - x_coor, y_coor
 
 
-    def draw(self, surface: Surface) -> None:
-        x_coor, y_coor = self.mouse_obj.get_pos()
-        center_x, center_y = GLARE_SPRITE.get_width() // 2, GLARE_SPRITE.get_height() // 2
-        surface.blit(GLARE_SPRITE, (x_coor - center_x, y_coor - center_y))
+    def draw(self, surface: Surface, current_position) -> None:
+        x_coor, y_coor = current_position
+        surface.blit(GLARE_SPRITE, (x_coor - self.center_x, y_coor - self.center_y))
 
 
 class FruitCollection:
@@ -69,7 +65,7 @@ class Fruit:
     def __init__(self, fruit_type: str, img_path: Path):
         self.fruit_type = fruit_type
         self.img = pygame.transform.scale(pygame.image.load(img_path), (160, 160))
-        self.x = random.randint(0, WIDTH)
+        self.x = random.randint(0, WIDTH-160)
         self.y = HEIGHT
         self.speed_x = self.get_speed_x_random()
         self.speed_y = -1600 + random.randint(-300, 300)
@@ -129,7 +125,7 @@ class Fruit:
 
     def get_x_location(self):
         current_x = int(self.get_x() + self.get_speed_x())
-        if current_x > WIDTH or current_x < 0:
+        if current_x > (WIDTH - 160) or current_x < 0:
             self.set_speed_x(-1 * self.get_speed_x() * 0.9)
             current_x = int(self.get_x() + self.get_speed_x())
             self.set_speed_y(self.get_speed_y() - 10)
@@ -137,7 +133,7 @@ class Fruit:
 
     @staticmethod
     def get_speed_x_random():
-        speed_x_random = random.randint(-1000, 1000) * 10 / 1000
+        speed_x_random = random.randint(-1000, 1000) * 20 / 1000
 
         while -0.1 < speed_x_random < 0.1:
             speed_x_random = random.randint(-1000, 1000) * 10 / 1000
@@ -225,6 +221,7 @@ class PlayTime:
             else:
                 Fruit.generate_random_fruit(self.fruit_collection, fruit_name)
 
+        self.cursor.draw(self.surface, current_position)
 
 # Scenes management
 
