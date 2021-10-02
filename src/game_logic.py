@@ -1,9 +1,24 @@
-from constants import WIDTH, HEIGHT
-from entities import Player, PlayTime
+import pygame
+from pygame import QUIT
+
+from constants import WIDTH, HEIGHT, CLOCK, FPS
+from entities import PlayScene
 
 
 def game_loop():
-    player = Player('Player1')
-    game = PlayTime(WIDTH, HEIGHT, player)
+    pygame.init()
 
-    game.init_game()
+    surface = pygame.display.set_mode((WIDTH, HEIGHT))
+    running = True
+
+    scene = PlayScene()
+
+    while running:
+        if pygame.event.get(QUIT):
+            running = False
+        scene.handle_events(pygame.event.get())
+        scene.render(surface)
+        scene.update(surface)
+
+        pygame.display.update()
+        CLOCK.tick(FPS)
